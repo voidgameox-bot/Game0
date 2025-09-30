@@ -3,501 +3,522 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HTML5 Sliding Puzzle</title>
+  <title>Light Labyrinth - HTML5 Puzzle</title>
   <style>
     :root {
-      --bg: #0b1020;
-      --panel: #121a33;
-      --accent: #6aa0ff;
-      --accent-2: #9bffd1;
+      --bg: #0a0e1a;
+      --panel: #111831;
+      --grid: #172046;
       --text: #e8eefc;
       --muted: #9aa8c7;
-      --tile: #162247;
-      --tile-hover: #1b2b5c;
-      --tile-empty: #0e1530;
+      --accent: #7bb2ff;
+      --accent-2: #9bffd1;
       --danger: #ff6a6a;
+      --tile: rgba(255,255,255,0.04);
+      --tile-border: rgba(255,255,255,0.08);
     }
 
-    html, body {
-      height: 100%;
-      margin: 0;
-      background: radial-gradient(1200px 800px at 80% -10%, #1b2550 0%, #0b1020 60%, #080c1a 100%);
-      color: var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-    }
+    html, body { height: 100%; margin: 0; background: radial-gradient(1200px 800px at 80% -10%, #1b2550 0%, #0b1020 60%, #080c1a 100%); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    .app { min-height: 100%; display: grid; grid-template-rows: auto auto 1fr auto; gap: 10px; }
+    header { padding: 16px clamp(12px, 4vw, 28px) 4px; }
+    h1 { margin: 0; font-size: clamp(20px, 3vw, 28px); letter-spacing: .3px; }
 
-    .app {
-      min-height: 100%;
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      align-items: start;
-    }
-
-    header {
-      padding: 20px clamp(16px, 4vw, 32px) 8px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(20px, 3vw, 28px);
-      letter-spacing: 0.3px;
-      font-weight: 700;
-    }
-
-    .container {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-      padding: 8px clamp(16px, 4vw, 32px) 24px;
-    }
-
-    .panel {
-      background: linear-gradient(180deg, rgba(18,26,51,0.9), rgba(18,26,51,0.6));
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 14px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
-      backdrop-filter: blur(8px);
-    }
-
-    .controls {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      padding: 16px;
-    }
-
-    .controls .row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    label {
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    select, button {
-      appearance: none;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.03);
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: 10px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background .15s ease, transform .05s ease, border-color .2s ease, box-shadow .2s ease;
-    }
-
-    select:focus, button:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(106,160,255,0.2);
-    }
-
-    button.primary {
-      background: linear-gradient(180deg, rgba(106,160,255,0.22), rgba(106,160,255,0.12));
-      border-color: rgba(106,160,255,0.45);
-    }
-
-    button.secondary {
-      background: linear-gradient(180deg, rgba(155,255,209,0.22), rgba(155,255,209,0.12));
-      border-color: rgba(155,255,209,0.45);
-    }
-
-    button:hover {
-      transform: translateY(-1px);
-      background: rgba(255,255,255,0.06);
-    }
-
-    .stats {
-      display: flex;
-      gap: 14px;
-      align-items: center;
-      flex-wrap: wrap;
-      font-variant-numeric: tabular-nums lining-nums;
-    }
-
-    .stat {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      padding: 10px 12px;
-      border-radius: 10px;
-      font-size: 14px;
-    }
-
-    .best { color: var(--accent-2); }
+    .controls { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 0 clamp(12px, 4vw, 28px); }
+    .panel { background: linear-gradient(180deg, rgba(17,24,49,0.92), rgba(17,24,49,0.6)); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05); backdrop-filter: blur(8px); }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px; align-items: center; }
+    label { color: var(--muted); font-size: 14px; }
+    select, button { appearance: none; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.03); color: var(--text); padding: 9px 12px; border-radius: 10px; font-size: 14px; cursor: pointer; }
+    button.primary { background: linear-gradient(180deg, rgba(123,178,255,0.22), rgba(123,178,255,0.12)); border-color: rgba(123,178,255,0.45); }
+    button.secondary { background: linear-gradient(180deg, rgba(155,255,209,0.22), rgba(155,255,209,0.12)); border-color: rgba(155,255,209,0.45); }
+    .stat { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); padding: 8px 10px; border-radius: 10px; font-size: 13px; }
     .danger { color: var(--danger); }
 
-    .board-wrap {
-      display: grid;
-      place-items: center;
-      padding: 8px 16px 20px;
-    }
+    .main { display: grid; grid-template-columns: 1fr; gap: 12px; padding: 0 clamp(12px, 4vw, 28px) 18px; }
+    .stage { display: grid; place-items: center; padding: 12px; }
+    canvas { width: min(94vw, 680px); aspect-ratio: 1 / 1; background: var(--grid); border: 1px solid var(--tile-border); border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), 0 10px 24px rgba(0,0,0,0.35); image-rendering: pixelated; }
 
-    .board {
-      position: relative;
-      width: min(92vw, 560px);
-      aspect-ratio: 1 / 1;
-      display: grid;
-      gap: 8px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      padding: 8px;
-      user-select: none;
-      touch-action: manipulation;
-    }
+    .legend { padding: 10px 12px 16px; color: var(--muted); font-size: 13px; }
+    .legend code { color: var(--text); background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 6px; }
 
-    .tile {
-      display: grid;
-      place-items: center;
-      background: linear-gradient(180deg, rgba(22,34,71,0.95), rgba(22,34,71,0.8));
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 12px;
-      color: var(--text);
-      font-weight: 700;
-      letter-spacing: 0.4px;
-      font-size: clamp(18px, 4.6vw, 30px);
-      box-shadow: 0 6px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05);
-      transition: transform .12s ease, background .15s ease, box-shadow .2s ease;
-      will-change: transform;
-    }
-
-    .tile:hover {
-      background: var(--tile-hover);
-    }
-
-    .tile.empty {
-      background: var(--tile-empty);
-      border-style: dashed;
-      color: transparent;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
-    }
-
-    .notice {
-      padding: 0 18px 18px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    footer {
-      padding: 8px 16px 24px;
-      color: var(--muted);
-      text-align: center;
-      font-size: 12px;
-    }
-
-    @media (min-width: 860px) {
-      .controls { grid-template-columns: 1fr 1fr 1fr; }
-    }
+    footer { padding: 6px 12px 18px; text-align: center; color: var(--muted); font-size: 12px; }
+    @media (min-width: 860px) { .controls { grid-template-columns: 1fr 1fr; } }
   </style>
+  <meta name="description" content="Direct neon light beams through mirrors, prisms, portals and filters to hit all targets.">
 </head>
 <body>
   <div class="app">
     <header>
-      <h1>Sliding Puzzle</h1>
+      <h1>Light Labyrinth</h1>
     </header>
 
-    <div class="container">
-      <section class="panel controls" aria-label="Game controls">
-        <div class="row" role="group" aria-label="Board size selector">
-          <label for="size">Board size</label>
-          <select id="size" name="size">
-            <option value="3">3 × 3</option>
-            <option value="4" selected>4 × 4</option>
-            <option value="5">5 × 5</option>
-          </select>
-          <button id="newGame" class="primary" aria-label="Start new shuffled game">New Game</button>
-          <button id="reset" class="secondary" aria-label="Reset to solved state">Reset</button>
-        </div>
+    <div class="controls">
+      <div class="panel toolbar" aria-label="Game controls">
+        <label for="level">Level</label>
+        <select id="level"></select>
+        <button id="play" class="primary" aria-label="Start/stop beams">Start</button>
+        <button id="undo" class="secondary" aria-label="Undo last action">Undo</button>
+        <button id="hint" class="secondary" aria-label="Use a hint">Hint (<span id="hintsLeft">3</span>)</button>
+        <span class="stat">Moves: <strong id="moves">0</strong></span>
+        <span class="stat">Completed: <strong id="progress">0/0</strong></span>
+        <span id="status" class="stat"></span>
+      </div>
+    </div>
 
-        <div class="row stats" aria-live="polite" aria-atomic="true">
-          <div class="stat">Moves: <strong id="moves">0</strong></div>
-          <div class="stat">Time: <strong id="time">00:00</strong></div>
-          <div class="stat best">Best: <strong id="best">—</strong></div>
-          <div id="status" class="stat" style="display:none"></div>
-        </div>
+    <div class="main">
+      <section class="panel stage">
+        <canvas id="game" width="720" height="720" tabindex="0" aria-label="Puzzle grid"></canvas>
       </section>
 
-      <section class="panel board-wrap">
-        <div id="board" class="board" role="grid" aria-label="Sliding puzzle board" tabindex="0"></div>
-        <div class="notice">
-          Use arrow keys, click/tap tiles next to the empty space. Finish in the fewest moves and time.
-        </div>
+      <section class="panel legend">
+        Click to select. Q/E or R to rotate mirrors/prisms. Arrow keys move selected movable blocks. Start to emit beams. Targets light up when hit with required color. Use Undo to revert a move; use Hint for a suggested action. Portals teleport beams, filters recolor, switches toggle gates.
       </section>
     </div>
 
     <footer>
-      Built with HTML5 + vanilla JS. Keyboard, mouse and touch supported.
+      Built with HTML5 Canvas + vanilla JS. Neon beams, multiple colors, portals, and more.
     </footer>
   </div>
 
   <script>
     (function() {
-      const boardEl = document.getElementById('board');
-      const sizeEl = document.getElementById('size');
-      const newGameBtn = document.getElementById('newGame');
-      const resetBtn = document.getElementById('reset');
+      // Directions
+      const DIR = { UP: 0, RIGHT: 1, DOWN: 2, LEFT: 3 };
+      const DIR_VECT = [ {x:0,y:-1}, {x:1,y:0}, {x:0,y:1}, {x:-1,y:0} ];
+      const OPP = [2,3,0,1];
+
+      // Colors as additive RGB sets
+      const COLORS = { R:'R', G:'G', B:'B', Y:'RG', C:'GB', M:'RB', W:'RGB' };
+      function colorToRGBA(c) {
+        let r=0,g=0,b=0;
+        if (c.includes('R')) r=255;
+        if (c.includes('G')) g=255;
+        if (c.includes('B')) b=255;
+        return `rgba(${r},${g},${b},1)`;
+      }
+      function colorGlow(c, alpha) {
+        let r=0,g=0,b=0;
+        if (c.includes('R')) r=255;
+        if (c.includes('G')) g=255;
+        if (c.includes('B')) b=255;
+        return `rgba(${r},${g},${b},${alpha})`;
+      }
+
+      // Tile and Object Types
+      const T = {
+        EMPTY: 0,
+        WALL: 1,
+        ABSORBER: 2,
+        EMITTER: 3,
+        TARGET: 4,
+        MIRROR: 5,      // two-state: \\ or /
+        PRISM: 6,       // splits beam into perpendiculars
+        LENS: 7,        // passes through
+        FILTER: 8,      // recolors to fixed
+        PORTAL_A: 9,    // paired ids
+        PORTAL_B: 10,
+        SWITCH: 11,     // toggles gates
+        GATE: 12,       // passable/blocked based on switch state
+        MOVABLE: 13     // movable block
+      };
+
+      // Level schema
+      const LEVELS = [];
+      function emptyGrid(w, h) { return Array(w*h).fill({ t: T.EMPTY }); }
+      function cloneGrid(grid) { return grid.map(c => ({...c})); }
+
+      // Level 1
+      (function(){
+        const w=8, h=8; const g = emptyGrid(w,h);
+        function at(x,y){ return g[y*w + x]; }
+        for (let x=0;x<w;x++){ at(x,0)={t:T.WALL}; at(x,h-1)={t:T.WALL}; }
+        for (let y=0;y<h;y++){ at(0,y)={t:T.WALL}; at(w-1,y)={t:T.WALL}; }
+        at(1,4)={t:T.EMITTER, dir: 1, color: 'R'};
+        at(6,4)={t:T.TARGET, required: 'R'};
+        at(4,4)={t:T.MIRROR, rot: 0};
+        LEVELS.push({ id:1, name:'Level 1 - First Reflection', w,h, grid:g, hints:[{type:'rotate', x:4, y:4}] , hintsLeft: 2 });
+      })();
+
+      // Level 5
+      (function(){
+        const w=10, h=8; const g = emptyGrid(w,h);
+        function at(x,y){ return g[y*w + x]; }
+        for (let x=0;x<w;x++){ at(x,0)={t:T.WALL}; at(x,h-1)={t:T.WALL}; }
+        for (let y=0;y<h;y++){ at(0,y)={t:T.WALL}; at(w-1,y)={t:T.WALL}; }
+        at(1,2)={t:T.EMITTER, dir:1, color: 'R'};
+        at(1,5)={t:T.EMITTER, dir:1, color: 'G'};
+        at(8,3)={t:T.TARGET, required: 'RG'};
+        at(5,3)={t:T.LENS};
+        at(6,3)={t:T.FILTER, color: 'G'};
+        at(6,5)={t:T.MIRROR, rot:1};
+        at(7,4)={t:T.PRISM, rot:0};
+        LEVELS.push({ id:5, name:'Level 5 - Mix & Split', w,h, grid:g, hints:[{type:'rotate',x:6,y:5},{type:'rotate',x:7,y:4}], hintsLeft: 2 });
+      })();
+
+      // Level 10
+      (function(){
+        const w=10,h=10; const g = emptyGrid(w,h);
+        function at(x,y){ return g[y*w + x]; }
+        for (let x=0;x<w;x++){ at(x,0)={t:T.WALL}; at(x,h-1)={t:T.WALL}; }
+        for (let y=0;y<h;y++){ at(0,y)={t:T.WALL}; at(w-1,y)={t:T.WALL}; }
+        at(2,5)={t:T.EMITTER, dir:1, color: 'B'};
+        at(4,5)={t:T.PORTAL_A, id:1};
+        at(7,3)={t:T.PORTAL_B, id:1};
+        at(8,3)={t:T.MIRROR, rot:0};
+        at(8,6)={t:T.TARGET, required: 'B'};
+        LEVELS.push({ id:10, name:'Level 10 - Portals', w,h, grid:g, hints:[{type:'rotate',x:8,y:3}], hintsLeft: 2 });
+      })();
+
+      // Level 15
+      (function(){
+        const w=12,h=8; const g = emptyGrid(w,h);
+        function at(x,y){ return g[y*w + x]; }
+        for (let x=0;x<w;x++){ at(x,0)={t:T.WALL}; at(x,h-1)={t:T.WALL}; }
+        for (let y=0;y<h;y++){ at(0,y)={t:T.WALL}; at(w-1,y)={t:T.WALL}; }
+        at(1,4)={t:T.EMITTER, dir:1, color: 'RGB'};
+        at(5,4)={t:T.SWITCH, id:1};
+        at(6,4)={t:T.GATE, id:1, open:false};
+        at(8,4)={t:T.PRISM, rot:0};
+        at(9,3)={t:T.FILTER, color: 'R'};
+        at(9,5)={t:T.FILTER, color: 'B'};
+        at(10,3)={t:T.TARGET, required: 'R'};
+        at(10,5)={t:T.TARGET, required: 'B'};
+        at(7,2)={t:T.MOVABLE};
+        LEVELS.push({ id:15, name:'Level 15 - Switches & Gates', w,h, grid:g, hints:[{type:'toggle',x:5,y:4}], hintsLeft: 3 });
+      })();
+
+      // DOM
+      const canvas = document.getElementById('game');
+      const ctx = canvas.getContext('2d');
+      const levelSelect = document.getElementById('level');
+      const playBtn = document.getElementById('play');
+      const undoBtn = document.getElementById('undo');
+      const hintBtn = document.getElementById('hint');
+      const hintsLeftEl = document.getElementById('hintsLeft');
       const movesEl = document.getElementById('moves');
-      const timeEl = document.getElementById('time');
-      const bestEl = document.getElementById('best');
+      const progressEl = document.getElementById('progress');
       const statusEl = document.getElementById('status');
 
-      /** Game state */
-      let gridSize = parseInt(sizeEl.value, 10);
-      let tiles = [];
-      let moveCount = 0;
-      let startTimestampMs = null;
-      let timerIntervalId = null;
+      // State
+      let levelIndex = 0;
+      let running = false;
+      let gridW = 0, gridH = 0;
+      let grid = [];
+      let beams = [];
+      let gatesState = new Map();
+      let moves = 0;
+      let selected = null; // {x,y}
+      let undoStack = [];
+      let hintsLeft = 0;
+      let solvedTargets = 0;
 
-      function formatTime(seconds) {
-        const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
-        const ss = String(seconds % 60).padStart(2, '0');
-        return mm + ':' + ss;
+      // Init level list
+      LEVELS.forEach((L,i)=>{
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        opt.textContent = `${L.id}. ${L.name}`;
+        levelSelect.appendChild(opt);
+      });
+
+      function loadLevel(index) {
+        levelIndex = index;
+        const L = LEVELS[index];
+        gridW = L.w; gridH = L.h;
+        grid = cloneGrid(L.grid);
+        gatesState = new Map();
+        for (let i=0;i<grid.length;i++) if (grid[i].t===T.GATE) gatesState.set(grid[i].id, !!grid[i].open);
+        running = false; beams = []; moves = 0; selected = null; undoStack = []; solvedTargets = 0;
+        hintsLeft = L.hintsLeft ?? 2; hintsLeftEl.textContent = String(hintsLeft);
+        progressEl.textContent = `0/${countTargets()}`;
+        statusEl.textContent = '';
+        playBtn.textContent = 'Start';
+        draw();
       }
 
-      function getBestKey(size) {
-        return 'slidingPuzzleBest_' + size + 'x' + size;
-      }
+      function countTargets() { let c=0; for (const cell of grid) if (cell.t===T.TARGET) c++; return c; }
+      function index(x,y){ return y*gridW + x; }
+      function inBounds(x,y){ return x>=0 && y>=0 && x<gridW && y<gridH; }
+      function get(x,y){ return grid[index(x,y)]; }
+      function setCell(x,y,val){ grid[index(x,y)] = val; }
 
-      function readBestTime(size) {
-        try {
-          const raw = localStorage.getItem(getBestKey(size));
-          return raw ? parseInt(raw, 10) : null;
-        } catch (e) { return null; }
-      }
+      function recordUndo(action) { undoStack.push(action); }
+      function toggleRun(){ running = !running; playBtn.textContent = running ? 'Stop' : 'Start'; if (running) simulate(); draw(); }
 
-      function writeBestTime(size, seconds) {
-        try { localStorage.setItem(getBestKey(size), String(seconds)); } catch (e) {}
-      }
-
-      function updateBestUI() {
-        const best = readBestTime(gridSize);
-        bestEl.textContent = best == null ? '—' : formatTime(best);
-      }
-
-      function startTimer() {
-        stopTimer();
-        startTimestampMs = Date.now();
-        timerIntervalId = setInterval(() => {
-          const elapsedSec = Math.floor((Date.now() - startTimestampMs) / 1000);
-          timeEl.textContent = formatTime(elapsedSec);
-        }, 500);
-      }
-
-      function stopTimer() {
-        if (timerIntervalId) {
-          clearInterval(timerIntervalId);
-          timerIntervalId = null;
+      function rotateAt(x,y){
+        const c = get(x,y);
+        if (c.t===T.MIRROR || c.t===T.PRISM) {
+          const before = c.rot||0; c.rot = (before^1);
+          recordUndo({ type:'rotate', x,y, before });
+          moves++; movesEl.textContent = String(moves);
+          if (running) simulate();
+          draw();
         }
       }
 
-      function setStatus(message, tone) {
-        statusEl.textContent = message || '';
-        statusEl.style.display = message ? 'inline-block' : 'none';
-        statusEl.classList.toggle('danger', tone === 'danger');
+      function moveMovable(dx,dy){
+        if (!selected) return;
+        const {x,y} = selected; const from = get(x,y);
+        if (from.t!==T.MOVABLE) return;
+        const nx=x+dx, ny=y+dy; if (!inBounds(nx,ny)) return;
+        const to = get(nx,ny); if (to.t!==T.EMPTY) return;
+        setCell(nx,ny, from); setCell(x,y, {t:T.EMPTY});
+        recordUndo({ type:'move', from:{x,y}, to:{x:nx,y:ny} });
+        selected = {x:nx,y:ny};
+        moves++; movesEl.textContent = String(moves);
+        if (running) simulate();
+        draw();
       }
 
-      function indexToRowCol(index) {
-        const row = Math.floor(index / gridSize);
-        const col = index % gridSize;
-        return { row, col };
+      function useHint(){
+        if (hintsLeft<=0) { flashStatus('No hints left', true); return; }
+        const hint = (LEVELS[levelIndex].hints||[])[LEVELS[levelIndex].hints.length - hintsLeft];
+        if (!hint) { flashStatus('No hint available', true); return; }
+        hintsLeft--; hintsLeftEl.textContent = String(hintsLeft);
+        if (hint.type==='rotate') { rotateAt(hint.x, hint.y); }
+        if (hint.type==='toggle') { flashStatus('Try to direct a beam to the switch', false); }
       }
 
-      function rowColToIndex(row, col) {
-        return row * gridSize + col;
+      function undo(){
+        const a = undoStack.pop(); if (!a) return;
+        if (a.type==='rotate') { const c=get(a.x,a.y); c.rot=a.before; }
+        if (a.type==='move') { const from=get(a.to.x,a.to.y); setCell(a.from.x,a.from.y,from); setCell(a.to.x,a.to.y,{t:T.EMPTY}); selected={x:a.from.x,y:a.from.y}; }
+        moves = Math.max(0, moves-1); movesEl.textContent = String(moves);
+        if (running) simulate();
+        draw();
       }
 
-      function isSolved(arr) {
-        for (let i = 0; i < arr.length - 1; i++) {
-          if (arr[i] !== i + 1) return false;
+      function flashStatus(msg, danger){ statusEl.textContent = msg; statusEl.classList.toggle('danger', !!danger); setTimeout(()=>{ statusEl.textContent=''; statusEl.classList.remove('danger'); }, 1500); }
+
+      // Simulation
+      function simulate(){
+        beams = [];
+        solvedTargets = 0;
+        const targetsLit = new Set();
+
+        const emitters = [];
+        for (let y=0;y<gridH;y++) for (let x=0;x<gridW;x++) {
+          const c = get(x,y);
+          if (c.t===T.EMITTER) emitters.push({ x,y, dir:c.dir, color:c.color });
         }
-        return arr[arr.length - 1] === 0;
+
+        const portalPairs = buildPortalPairs();
+
+        for (const em of emitters) { castBeam(em.x, em.y, em.dir, em.color, 0, portalPairs, targetsLit); }
+
+        for (let y=0;y<gridH;y++) for (let x=0;x<gridW;x++) {
+          const c = get(x,y);
+          if (c.t===T.TARGET) { if (targetsLit.has(index(x,y))) solvedTargets++; }
+        }
+        progressEl.textContent = `${solvedTargets}/${countTargets()}`;
+        if (solvedTargets===countTargets() && countTargets()>0) { flashStatus('Level complete!', false); running = false; playBtn.textContent = 'Start'; }
       }
 
-      function createSolvedTiles() {
-        const count = gridSize * gridSize;
-        const arr = new Array(count);
-        for (let i = 0; i < count - 1; i++) arr[i] = i + 1;
-        arr[count - 1] = 0; // empty
-        return arr;
-      }
-
-      function getInversionCount(arr) {
-        const nums = arr.filter(n => n !== 0);
-        let inv = 0;
-        for (let i = 0; i < nums.length; i++) {
-          for (let j = i + 1; j < nums.length; j++) {
-            if (nums[i] > nums[j]) inv++;
+      function buildPortalPairs(){
+        const pairs = new Map();
+        const found = {};
+        for (let y=0;y<gridH;y++) for (let x=0;x<gridW;x++) {
+          const c=get(x,y);
+          if ((c.t===T.PORTAL_A || c.t===T.PORTAL_B) && c.id!=null) {
+            const key=c.id; if (!found[key]) found[key]=[]; found[key].push({x,y});
           }
         }
-        return inv;
+        for (const k of Object.keys(found)) { const arr=found[k]; if (arr.length===2) { pairs.set(Number(k), { a:arr[0], b:arr[1] }); } }
+        return pairs;
       }
 
-      function isSolvable(arr) {
-        const inv = getInversionCount(arr);
-        const side = gridSize;
-        if (side % 2 === 1) {
-          return inv % 2 === 0;
-        } else {
-          const emptyIndex = arr.indexOf(0);
-          const { row } = indexToRowCol(emptyIndex);
-          const rowFromBottom = side - row; // 1-based
-          if (rowFromBottom % 2 === 0) {
-            return inv % 2 === 1;
-          } else {
-            return inv % 2 === 0;
+      function gateIsOpen(id){ return gatesState.get(id)!==false; }
+
+      function castBeam(sx, sy, dir, color, depth, portalPairs, targetsLit){
+        const MAX_STEPS = 200;
+        let x=sx, y=sy; let d=dir; let c=color;
+        let steps=0;
+        x += DIR_VECT[d].x; y += DIR_VECT[d].y;
+        while (steps<MAX_STEPS) {
+          steps++;
+          if (!inBounds(x,y)) break;
+          const cell = get(x,y);
+          const seg = { x, y, dir:d, color:c };
+          beams.push(seg);
+
+          if (cell.t===T.EMPTY || (cell.t===T.GATE && gateIsOpen(cell.id))) { x += DIR_VECT[d].x; y += DIR_VECT[d].y; continue; }
+          if (cell.t===T.WALL) break;
+          if (cell.t===T.ABSORBER) break;
+          if (cell.t===T.TARGET) { if (normalizeColor(c)===normalizeColor(cell.required||'RGB')) targetsLit.add(index(x,y)); x += DIR_VECT[d].x; y += DIR_VECT[d].y; continue; }
+          if (cell.t===T.LENS) { x += DIR_VECT[d].x; y += DIR_VECT[d].y; continue; }
+          if (cell.t===T.FILTER) { c = cell.color||c; x += DIR_VECT[d].x; y += DIR_VECT[d].y; continue; }
+          if (cell.t===T.MIRROR) {
+            if ((cell.rot||0)===0) { if (d===0) d=3; else if (d===1) d=2; else if (d===2) d=1; else if (d===3) d=0; }
+            else { if (d===0) d=1; else if (d===1) d=0; else if (d===2) d=3; else if (d===3) d=2; }
+            x += DIR_VECT[d].x; y += DIR_VECT[d].y; continue;
           }
-        }
-      }
-
-      function shuffleSolvable() {
-        const count = gridSize * gridSize;
-        const arr = createSolvedTiles();
-        do {
-          for (let i = count - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+          if (cell.t===T.PRISM) {
+            const rot = cell.rot||0;
+            if (rot===0) { if (d===0 || d===2) { castBeam(x, y, 3, c, depth+1, portalPairs, targetsLit); castBeam(x, y, 1, c, depth+1, portalPairs, targetsLit); } }
+            else { if (d===3 || d===1) { castBeam(x, y, 0, c, depth+1, portalPairs, targetsLit); castBeam(x, y, 2, c, depth+1, portalPairs, targetsLit); } }
+            x += DIR_VECT[d].x; y += DIR_VECT[d].y; continue;
           }
-        } while (!isSolvable(arr) || isSolved(arr));
-        return arr;
-      }
-
-      function render() {
-        boardEl.innerHTML = '';
-        boardEl.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
-        boardEl.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
-
-        for (let i = 0; i < tiles.length; i++) {
-          const value = tiles[i];
-          const tile = document.createElement('div');
-          tile.role = 'gridcell';
-          tile.className = 'tile' + (value === 0 ? ' empty' : '');
-          tile.dataset.index = String(i);
-          tile.textContent = value === 0 ? '' : String(value);
-          tile.tabIndex = value === 0 ? -1 : 0;
-          tile.setAttribute('aria-label', value === 0 ? 'Empty space' : 'Tile ' + value);
-          tile.addEventListener('click', onTileClick);
-          tile.addEventListener('touchstart', onTileTap, { passive: true });
-          boardEl.appendChild(tile);
-        }
-      }
-
-      function swap(i, j) {
-        const tmp = tiles[i];
-        tiles[i] = tiles[j];
-        tiles[j] = tmp;
-      }
-
-      function neighborsOf(index) {
-        const { row, col } = indexToRowCol(index);
-        const n = [];
-        if (row > 0) n.push(rowColToIndex(row - 1, col));
-        if (row < gridSize - 1) n.push(rowColToIndex(row + 1, col));
-        if (col > 0) n.push(rowColToIndex(row, col - 1));
-        if (col < gridSize - 1) n.push(rowColToIndex(row, col + 1));
-        return n;
-      }
-
-      function tryMove(index) {
-        const emptyIndex = tiles.indexOf(0);
-        const adj = neighborsOf(index);
-        if (adj.includes(emptyIndex)) {
-          swap(index, emptyIndex);
-          moveCount++;
-          movesEl.textContent = String(moveCount);
-          render();
-          checkSolved();
-          return true;
-        }
-        return false;
-      }
-
-      function onTileClick(e) {
-        const index = parseInt(e.currentTarget.dataset.index, 10);
-        tryMove(index);
-      }
-
-      function onTileTap(e) {
-        const target = e.target.closest('.tile');
-        if (!target) return;
-        const index = parseInt(target.dataset.index, 10);
-        tryMove(index);
-      }
-
-      function moveByDirection(dx, dy) {
-        const empty = tiles.indexOf(0);
-        const { row, col } = indexToRowCol(empty);
-        const tr = row + dy;
-        const tc = col + dx;
-        if (tr < 0 || tc < 0 || tr >= gridSize || tc >= gridSize) return false;
-        const targetIndex = rowColToIndex(tr, tc);
-        swap(empty, targetIndex);
-        moveCount++;
-        movesEl.textContent = String(moveCount);
-        render();
-        checkSolved();
-        return true;
-      }
-
-      function onKeyDown(e) {
-        switch (e.key) {
-          case 'ArrowUp': e.preventDefault(); moveByDirection(0, 1); break;   // move tile down into empty
-          case 'ArrowDown': e.preventDefault(); moveByDirection(0, -1); break; // move tile up into empty
-          case 'ArrowLeft': e.preventDefault(); moveByDirection(1, 0); break;  // move tile right into empty
-          case 'ArrowRight': e.preventDefault(); moveByDirection(-1, 0); break; // move tile left into empty
-          case 'r': case 'R': newGame(); break;
-        }
-      }
-
-      function checkSolved() {
-        if (isSolved(tiles)) {
-          stopTimer();
-          const elapsedSec = Math.floor((Date.now() - startTimestampMs) / 1000);
-          setStatus('Solved! ' + moveCount + ' moves in ' + formatTime(elapsedSec), '');
-          const best = readBestTime(gridSize);
-          if (best == null || elapsedSec < best) {
-            writeBestTime(gridSize, elapsedSec);
-            updateBestUI();
+          if (cell.t===T.SWITCH) { const id = cell.id; gatesState.set(id, !gateIsOpen(id)); x += DIR_VECT[d].x; y += DIR_VECT[d].y; continue; }
+          if (cell.t===T.GATE) { if (gateIsOpen(cell.id)) { x += DIR_VECT[d].x; y += DIR_VECT[d].y; continue; } else break; }
+          if ((cell.t===T.PORTAL_A || cell.t===T.PORTAL_B) && cell.id!=null) {
+            const pair = portalPairs.get(cell.id);
+            if (pair) {
+              const src = (cell.t===T.PORTAL_A) ? pair.a : pair.b;
+              const dst = (cell.t===T.PORTAL_A) ? pair.b : pair.a;
+              if (src.x===x && src.y===y) { x = dst.x + DIR_VECT[d].x; y = dst.y + DIR_VECT[d].y; continue; }
+            }
+            x += DIR_VECT[d].x; y += DIR_VECT[d].y; continue;
           }
-        } else {
-          setStatus('', '');
+          if (cell.t===T.MOVABLE) { break; }
+          break;
         }
       }
 
-      function newGame() {
-        gridSize = parseInt(sizeEl.value, 10);
-        tiles = shuffleSolvable();
-        moveCount = 0;
-        movesEl.textContent = '0';
-        timeEl.textContent = '00:00';
-        updateBestUI();
-        render();
-        startTimer();
-        boardEl.focus({ preventScroll: true });
+      function normalizeColor(c){ return (c||'').split('').sort().join(''); }
+
+      // Rendering
+      function draw(){
+        const W = canvas.width, H = canvas.height;
+        ctx.clearRect(0,0,W,H);
+        const cs = Math.floor(Math.min(W/gridW, H/gridH));
+        const ox = Math.floor((W - cs*gridW)/2), oy = Math.floor((H - cs*gridH)/2);
+
+        ctx.fillStyle = 'rgba(255,255,255,0.03)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        ctx.lineWidth = 1;
+        ctx.fillRect(ox-8, oy-8, cs*gridW+16, cs*gridH+16);
+        for (let y=0;y<=gridH;y++) { line(ox, oy+y*cs, ox+gridW*cs, oy+y*cs, 'rgba(255,255,255,0.05)'); }
+        for (let x=0;x<=gridW;x++) { line(ox+x*cs, oy, ox+x*cs, oy+gridH*cs, 'rgba(255,255,255,0.05)'); }
+
+        if (running) drawBeams(ox,oy,cs);
+
+        for (let y=0;y<gridH;y++) for (let x=0;x<gridW;x++) {
+          const cell = get(x,y);
+          const px=ox+x*cs, py=oy+y*cs;
+          drawCell(cell, px, py, cs, x,y);
+          if (selected && selected.x===x && selected.y===y) { ctx.strokeStyle = '#7bb2ff'; ctx.lineWidth = 2; ctx.strokeRect(px+2, py+2, cs-4, cs-4); }
+        }
       }
 
-      function resetSolved() {
-        tiles = createSolvedTiles();
-        moveCount = 0;
-        movesEl.textContent = '0';
-        timeEl.textContent = '00:00';
-        render();
-        stopTimer();
-        setStatus('Reset to solved order. Press New Game to shuffle.', '');
+      function line(x1,y1,x2,y2, stroke){ ctx.beginPath(); ctx.moveTo(x1+0.5,y1+0.5); ctx.lineTo(x2+0.5,y2+0.5); ctx.strokeStyle=stroke; ctx.stroke(); }
+
+      function drawBeams(ox,oy,cs){
+        for (const seg of beams) {
+          const cx=ox+seg.x*cs+cs/2, cy=oy+seg.y*cs+cs/2;
+          const dx=DIR_VECT[seg.dir].x, dy=DIR_VECT[seg.dir].y;
+          const tx=cx+dx*(cs/2), ty=cy+dy*(cs/2);
+          ctx.shadowBlur = 12; ctx.shadowColor = colorGlow(seg.color, 0.6);
+          ctx.lineWidth = 6; ctx.strokeStyle = colorToRGBA(seg.color); ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(tx,ty); ctx.stroke();
+          ctx.shadowBlur = 0;
+        }
       }
 
-      // Wire up controls
-      newGameBtn.addEventListener('click', newGame);
-      resetBtn.addEventListener('click', resetSolved);
-      sizeEl.addEventListener('change', () => newGame());
-      boardEl.addEventListener('keydown', onKeyDown);
+      function drawCell(cell, px, py, cs, gx,gy){
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 1;
+        ctx.fillRect(px+1, py+1, cs-2, cs-2);
+        ctx.strokeRect(px+1, py+1, cs-2, cs-2);
 
-      // Initialize
-      updateBestUI();
-      resetSolved();
+        ctx.save();
+        ctx.translate(px+cs/2, py+cs/2);
+        switch(cell.t){
+          case T.WALL:
+            roundedRect(-cs*0.45,-cs*0.45, cs*0.9, cs*0.9, 8, '#1d274f', '#2a3874');
+            break;
+          case T.ABSORBER:
+            roundedRect(-cs*0.42,-cs*0.42, cs*0.84, cs*0.84, 10, '#2a1d1d', '#5c2d2d');
+            circle(0,0, cs*0.24, '#5c2d2d');
+            break;
+          case T.EMITTER:
+            arrow(cell.dir||0, cs, colorToRGBA(cell.color||'RGB'));
+            break;
+          case T.TARGET:
+            circle(0,0, cs*0.30, colorGlow(cell.required||'RGB', 0.2), colorToRGBA(cell.required||'RGB'));
+            break;
+          case T.MIRROR:
+            rotate(cell.rot||0 ? Math.PI/2 : 0);
+            mirrorGlyph(cs);
+            break;
+          case T.PRISM:
+            rotate(cell.rot||0 ? Math.PI/2 : 0);
+            prismGlyph(cs);
+            break;
+          case T.LENS:
+            lensGlyph(cs);
+            break;
+          case T.FILTER:
+            filterGlyph(cs, colorToRGBA(cell.color||'RGB'));
+            break;
+          case T.PORTAL_A:
+          case T.PORTAL_B:
+            portalGlyph(cs, cell.t===T.PORTAL_A ? '#7bb2ff' : '#9bffd1');
+            smallText(String(cell.id||''), cs);
+            break;
+          case T.SWITCH:
+            switchGlyph(cs);
+            smallText(String(cell.id||''), cs);
+            break;
+          case T.GATE:
+            gateGlyph(cs, gateIsOpen(cell.id));
+            smallText(String(cell.id||''), cs);
+            break;
+          case T.MOVABLE:
+            roundedRect(-cs*0.40,-cs*0.40, cs*0.80, cs*0.80, 8, '#203155', '#3a5394');
+            break;
+        }
+        ctx.restore();
+      }
+
+      function roundedRect(x,y,w,h,r, fill, stroke){ ctx.beginPath(); const rr=r; ctx.moveTo(x+rr,y); ctx.arcTo(x+w,y, x+w,y+h, rr); ctx.arcTo(x+w,y+h, x,y+h, rr); ctx.arcTo(x,y+h, x,y, rr); ctx.arcTo(x,y, x+w,y, rr); ctx.closePath(); ctx.fillStyle=fill; ctx.fill(); ctx.strokeStyle=stroke; ctx.stroke(); }
+      function circle(x,y,r, glow, stroke){ if (glow){ ctx.shadowBlur=14; ctx.shadowColor=glow; } ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.strokeStyle=stroke||'#fff'; ctx.lineWidth=3; ctx.stroke(); ctx.shadowBlur=0; }
+      function smallText(t, cs){ ctx.fillStyle = '#cdd6f6'; ctx.font = `bold ${Math.floor(cs*0.22)}px system-ui`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(t, 0, cs*0.25); }
+      function rotate(rad){ ctx.rotate(rad); }
+      function arrow(dir, cs, color){ ctx.save(); ctx.rotate((dir||0)*Math.PI/2); ctx.fillStyle=color; ctx.shadowBlur=10; ctx.shadowColor=color; ctx.beginPath(); ctx.moveTo(-cs*0.3, cs*0.2); ctx.lineTo(-cs*0.3, -cs*0.2); ctx.lineTo(cs*0.3, 0); ctx.closePath(); ctx.fill(); ctx.shadowBlur=0; ctx.restore(); }
+      function mirrorGlyph(cs){ ctx.strokeStyle = '#b7c7ff'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(-cs*0.32, -cs*0.32); ctx.lineTo(cs*0.32, cs*0.32); ctx.stroke(); }
+      function prismGlyph(cs){ roundedRect(-cs*0.26,-cs*0.26, cs*0.52, cs*0.52, 6, '#1a2c4e', '#86c5ff'); }
+      function lensGlyph(cs){ circle(0,0, cs*0.28, 'rgba(123,178,255,0.3)','#86c5ff'); }
+      function filterGlyph(cs, color){ roundedRect(-cs*0.30,-cs*0.18, cs*0.60, cs*0.36, 6, 'rgba(255,255,255,0.06)', color); }
+      function portalGlyph(cs, color){ circle(0,0, cs*0.32, color.replace('1)','0.35)'), color); }
+      function switchGlyph(cs){ roundedRect(-cs*0.20,-cs*0.14, cs*0.40, cs*0.28, 6, '#294f29', '#6ad06a'); }
+      function gateGlyph(cs, open){ const col=open?'#2a6a2a':'#5c2d2d'; roundedRect(-cs*0.38,-cs*0.12, cs*0.76, cs*0.24, 6, open?'#1d3a1d':'#2a1d1d', col); }
+
+      // Input
+      canvas.addEventListener('click', (e)=>{
+        const {gx,gy} = eventToGrid(e); if (!inBounds(gx,gy)) return;
+        const c = get(gx,gy);
+        selected = {x:gx,y:gy};
+        if (c.t===T.MIRROR || c.t===T.PRISM) { rotateAt(gx,gy); }
+        if (c.t===T.SWITCH && running) { gatesState.set(c.id, !gateIsOpen(c.id)); simulate(); }
+        draw();
+      });
+
+      window.addEventListener('keydown', (e)=>{
+        if (e.key===' '){ e.preventDefault(); toggleRun(); return; }
+        if (e.key==='z' && (e.ctrlKey||e.metaKey)) { e.preventDefault(); undo(); return; }
+        if (e.key==='h') { e.preventDefault(); useHint(); return; }
+        if (!selected) return;
+        if (e.key==='q' || e.key==='Q') { e.preventDefault(); rotateAt(selected.x, selected.y); return; }
+        if (e.key==='e' || e.key==='E' || e.key==='r' || e.key==='R') { e.preventDefault(); rotateAt(selected.x, selected.y); return; }
+        if (e.key==='ArrowUp') { e.preventDefault(); moveMovable(0,-1); return; }
+        if (e.key==='ArrowDown') { e.preventDefault(); moveMovable(0,1); return; }
+        if (e.key==='ArrowLeft') { e.preventDefault(); moveMovable(-1,0); return; }
+        if (e.key==='ArrowRight') { e.preventDefault(); moveMovable(1,0); return; }
+      });
+
+      function eventToGrid(e){ const rect=canvas.getBoundingClientRect(); const scaleX=canvas.width/rect.width; const scaleY=canvas.height/rect.height; const x=(e.clientX-rect.left)*scaleX; const y=(e.clientY-rect.top)*scaleY; const cs=Math.min(canvas.width/gridW, canvas.height/gridH); const ox=(canvas.width - cs*gridW)/2; const oy=(canvas.height - cs*gridH)/2; const gx=Math.floor((x-ox)/cs); const gy=Math.floor((y-oy)/cs); return {gx,gy}; }
+
+      // UI buttons
+      playBtn.addEventListener('click', ()=>{ toggleRun(); if (running) simulate(); draw(); });
+      undoBtn.addEventListener('click', ()=>{ undo(); });
+      hintBtn.addEventListener('click', ()=>{ useHint(); });
+      levelSelect.addEventListener('change', ()=> loadLevel(parseInt(levelSelect.value,10)) );
+
+      // Populate levels and start
+      levelSelect.value = '0';
+      loadLevel(0);
+
+      // Responsive canvas backing store to keep sharp
+      function resizeCanvas(){ const dpr = window.devicePixelRatio||1; const cssSize = Math.min(window.innerWidth*0.94, 680); canvas.width = Math.floor(cssSize*dpr); canvas.height = Math.floor(cssSize*dpr); canvas.style.width = Math.floor(cssSize) + 'px'; canvas.style.height = Math.floor(cssSize) + 'px'; draw(); }
+      window.addEventListener('resize', resizeCanvas); resizeCanvas();
     })();
   </script>
 </body>
