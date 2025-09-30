@@ -1,1 +1,504 @@
-Hello
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HTML5 Sliding Puzzle</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121a33;
+      --accent: #6aa0ff;
+      --accent-2: #9bffd1;
+      --text: #e8eefc;
+      --muted: #9aa8c7;
+      --tile: #162247;
+      --tile-hover: #1b2b5c;
+      --tile-empty: #0e1530;
+      --danger: #ff6a6a;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: radial-gradient(1200px 800px at 80% -10%, #1b2550 0%, #0b1020 60%, #080c1a 100%);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+
+    .app {
+      min-height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      align-items: start;
+    }
+
+    header {
+      padding: 20px clamp(16px, 4vw, 32px) 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(20px, 3vw, 28px);
+      letter-spacing: 0.3px;
+      font-weight: 700;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      padding: 8px clamp(16px, 4vw, 32px) 24px;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(18,26,51,0.9), rgba(18,26,51,0.6));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+      backdrop-filter: blur(8px);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .controls .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    select, button {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background .15s ease, transform .05s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+
+    select:focus, button:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(106,160,255,0.2);
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, rgba(106,160,255,0.22), rgba(106,160,255,0.12));
+      border-color: rgba(106,160,255,0.45);
+    }
+
+    button.secondary {
+      background: linear-gradient(180deg, rgba(155,255,209,0.22), rgba(155,255,209,0.12));
+      border-color: rgba(155,255,209,0.45);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .stats {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .best { color: var(--accent-2); }
+    .danger { color: var(--danger); }
+
+    .board-wrap {
+      display: grid;
+      place-items: center;
+      padding: 8px 16px 20px;
+    }
+
+    .board {
+      position: relative;
+      width: min(92vw, 560px);
+      aspect-ratio: 1 / 1;
+      display: grid;
+      gap: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 8px;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .tile {
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, rgba(22,34,71,0.95), rgba(22,34,71,0.8));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      color: var(--text);
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      font-size: clamp(18px, 4.6vw, 30px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05);
+      transition: transform .12s ease, background .15s ease, box-shadow .2s ease;
+      will-change: transform;
+    }
+
+    .tile:hover {
+      background: var(--tile-hover);
+    }
+
+    .tile.empty {
+      background: var(--tile-empty);
+      border-style: dashed;
+      color: transparent;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+    }
+
+    .notice {
+      padding: 0 18px 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    footer {
+      padding: 8px 16px 24px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 12px;
+    }
+
+    @media (min-width: 860px) {
+      .controls { grid-template-columns: 1fr 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Sliding Puzzle</h1>
+    </header>
+
+    <div class="container">
+      <section class="panel controls" aria-label="Game controls">
+        <div class="row" role="group" aria-label="Board size selector">
+          <label for="size">Board size</label>
+          <select id="size" name="size">
+            <option value="3">3 × 3</option>
+            <option value="4" selected>4 × 4</option>
+            <option value="5">5 × 5</option>
+          </select>
+          <button id="newGame" class="primary" aria-label="Start new shuffled game">New Game</button>
+          <button id="reset" class="secondary" aria-label="Reset to solved state">Reset</button>
+        </div>
+
+        <div class="row stats" aria-live="polite" aria-atomic="true">
+          <div class="stat">Moves: <strong id="moves">0</strong></div>
+          <div class="stat">Time: <strong id="time">00:00</strong></div>
+          <div class="stat best">Best: <strong id="best">—</strong></div>
+          <div id="status" class="stat" style="display:none"></div>
+        </div>
+      </section>
+
+      <section class="panel board-wrap">
+        <div id="board" class="board" role="grid" aria-label="Sliding puzzle board" tabindex="0"></div>
+        <div class="notice">
+          Use arrow keys, click/tap tiles next to the empty space. Finish in the fewest moves and time.
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      Built with HTML5 + vanilla JS. Keyboard, mouse and touch supported.
+    </footer>
+  </div>
+
+  <script>
+    (function() {
+      const boardEl = document.getElementById('board');
+      const sizeEl = document.getElementById('size');
+      const newGameBtn = document.getElementById('newGame');
+      const resetBtn = document.getElementById('reset');
+      const movesEl = document.getElementById('moves');
+      const timeEl = document.getElementById('time');
+      const bestEl = document.getElementById('best');
+      const statusEl = document.getElementById('status');
+
+      /** Game state */
+      let gridSize = parseInt(sizeEl.value, 10);
+      let tiles = [];
+      let moveCount = 0;
+      let startTimestampMs = null;
+      let timerIntervalId = null;
+
+      function formatTime(seconds) {
+        const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const ss = String(seconds % 60).padStart(2, '0');
+        return mm + ':' + ss;
+      }
+
+      function getBestKey(size) {
+        return 'slidingPuzzleBest_' + size + 'x' + size;
+      }
+
+      function readBestTime(size) {
+        try {
+          const raw = localStorage.getItem(getBestKey(size));
+          return raw ? parseInt(raw, 10) : null;
+        } catch (e) { return null; }
+      }
+
+      function writeBestTime(size, seconds) {
+        try { localStorage.setItem(getBestKey(size), String(seconds)); } catch (e) {}
+      }
+
+      function updateBestUI() {
+        const best = readBestTime(gridSize);
+        bestEl.textContent = best == null ? '—' : formatTime(best);
+      }
+
+      function startTimer() {
+        stopTimer();
+        startTimestampMs = Date.now();
+        timerIntervalId = setInterval(() => {
+          const elapsedSec = Math.floor((Date.now() - startTimestampMs) / 1000);
+          timeEl.textContent = formatTime(elapsedSec);
+        }, 500);
+      }
+
+      function stopTimer() {
+        if (timerIntervalId) {
+          clearInterval(timerIntervalId);
+          timerIntervalId = null;
+        }
+      }
+
+      function setStatus(message, tone) {
+        statusEl.textContent = message || '';
+        statusEl.style.display = message ? 'inline-block' : 'none';
+        statusEl.classList.toggle('danger', tone === 'danger');
+      }
+
+      function indexToRowCol(index) {
+        const row = Math.floor(index / gridSize);
+        const col = index % gridSize;
+        return { row, col };
+      }
+
+      function rowColToIndex(row, col) {
+        return row * gridSize + col;
+      }
+
+      function isSolved(arr) {
+        for (let i = 0; i < arr.length - 1; i++) {
+          if (arr[i] !== i + 1) return false;
+        }
+        return arr[arr.length - 1] === 0;
+      }
+
+      function createSolvedTiles() {
+        const count = gridSize * gridSize;
+        const arr = new Array(count);
+        for (let i = 0; i < count - 1; i++) arr[i] = i + 1;
+        arr[count - 1] = 0; // empty
+        return arr;
+      }
+
+      function getInversionCount(arr) {
+        const nums = arr.filter(n => n !== 0);
+        let inv = 0;
+        for (let i = 0; i < nums.length; i++) {
+          for (let j = i + 1; j < nums.length; j++) {
+            if (nums[i] > nums[j]) inv++;
+          }
+        }
+        return inv;
+      }
+
+      function isSolvable(arr) {
+        const inv = getInversionCount(arr);
+        const side = gridSize;
+        if (side % 2 === 1) {
+          return inv % 2 === 0;
+        } else {
+          const emptyIndex = arr.indexOf(0);
+          const { row } = indexToRowCol(emptyIndex);
+          const rowFromBottom = side - row; // 1-based
+          if (rowFromBottom % 2 === 0) {
+            return inv % 2 === 1;
+          } else {
+            return inv % 2 === 0;
+          }
+        }
+      }
+
+      function shuffleSolvable() {
+        const count = gridSize * gridSize;
+        const arr = createSolvedTiles();
+        do {
+          for (let i = count - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+          }
+        } while (!isSolvable(arr) || isSolved(arr));
+        return arr;
+      }
+
+      function render() {
+        boardEl.innerHTML = '';
+        boardEl.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+        boardEl.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
+
+        for (let i = 0; i < tiles.length; i++) {
+          const value = tiles[i];
+          const tile = document.createElement('div');
+          tile.role = 'gridcell';
+          tile.className = 'tile' + (value === 0 ? ' empty' : '');
+          tile.dataset.index = String(i);
+          tile.textContent = value === 0 ? '' : String(value);
+          tile.tabIndex = value === 0 ? -1 : 0;
+          tile.setAttribute('aria-label', value === 0 ? 'Empty space' : 'Tile ' + value);
+          tile.addEventListener('click', onTileClick);
+          tile.addEventListener('touchstart', onTileTap, { passive: true });
+          boardEl.appendChild(tile);
+        }
+      }
+
+      function swap(i, j) {
+        const tmp = tiles[i];
+        tiles[i] = tiles[j];
+        tiles[j] = tmp;
+      }
+
+      function neighborsOf(index) {
+        const { row, col } = indexToRowCol(index);
+        const n = [];
+        if (row > 0) n.push(rowColToIndex(row - 1, col));
+        if (row < gridSize - 1) n.push(rowColToIndex(row + 1, col));
+        if (col > 0) n.push(rowColToIndex(row, col - 1));
+        if (col < gridSize - 1) n.push(rowColToIndex(row, col + 1));
+        return n;
+      }
+
+      function tryMove(index) {
+        const emptyIndex = tiles.indexOf(0);
+        const adj = neighborsOf(index);
+        if (adj.includes(emptyIndex)) {
+          swap(index, emptyIndex);
+          moveCount++;
+          movesEl.textContent = String(moveCount);
+          render();
+          checkSolved();
+          return true;
+        }
+        return false;
+      }
+
+      function onTileClick(e) {
+        const index = parseInt(e.currentTarget.dataset.index, 10);
+        tryMove(index);
+      }
+
+      function onTileTap(e) {
+        const target = e.target.closest('.tile');
+        if (!target) return;
+        const index = parseInt(target.dataset.index, 10);
+        tryMove(index);
+      }
+
+      function moveByDirection(dx, dy) {
+        const empty = tiles.indexOf(0);
+        const { row, col } = indexToRowCol(empty);
+        const tr = row + dy;
+        const tc = col + dx;
+        if (tr < 0 || tc < 0 || tr >= gridSize || tc >= gridSize) return false;
+        const targetIndex = rowColToIndex(tr, tc);
+        swap(empty, targetIndex);
+        moveCount++;
+        movesEl.textContent = String(moveCount);
+        render();
+        checkSolved();
+        return true;
+      }
+
+      function onKeyDown(e) {
+        switch (e.key) {
+          case 'ArrowUp': e.preventDefault(); moveByDirection(0, 1); break;   // move tile down into empty
+          case 'ArrowDown': e.preventDefault(); moveByDirection(0, -1); break; // move tile up into empty
+          case 'ArrowLeft': e.preventDefault(); moveByDirection(1, 0); break;  // move tile right into empty
+          case 'ArrowRight': e.preventDefault(); moveByDirection(-1, 0); break; // move tile left into empty
+          case 'r': case 'R': newGame(); break;
+        }
+      }
+
+      function checkSolved() {
+        if (isSolved(tiles)) {
+          stopTimer();
+          const elapsedSec = Math.floor((Date.now() - startTimestampMs) / 1000);
+          setStatus('Solved! ' + moveCount + ' moves in ' + formatTime(elapsedSec), '');
+          const best = readBestTime(gridSize);
+          if (best == null || elapsedSec < best) {
+            writeBestTime(gridSize, elapsedSec);
+            updateBestUI();
+          }
+        } else {
+          setStatus('', '');
+        }
+      }
+
+      function newGame() {
+        gridSize = parseInt(sizeEl.value, 10);
+        tiles = shuffleSolvable();
+        moveCount = 0;
+        movesEl.textContent = '0';
+        timeEl.textContent = '00:00';
+        updateBestUI();
+        render();
+        startTimer();
+        boardEl.focus({ preventScroll: true });
+      }
+
+      function resetSolved() {
+        tiles = createSolvedTiles();
+        moveCount = 0;
+        movesEl.textContent = '0';
+        timeEl.textContent = '00:00';
+        render();
+        stopTimer();
+        setStatus('Reset to solved order. Press New Game to shuffle.', '');
+      }
+
+      // Wire up controls
+      newGameBtn.addEventListener('click', newGame);
+      resetBtn.addEventListener('click', resetSolved);
+      sizeEl.addEventListener('change', () => newGame());
+      boardEl.addEventListener('keydown', onKeyDown);
+
+      // Initialize
+      updateBestUI();
+      resetSolved();
+    })();
+  </script>
+</body>
+</html>
